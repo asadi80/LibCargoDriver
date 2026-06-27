@@ -1,15 +1,63 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+// app/_layout.tsx
+import { Stack, useRouter, useSegments } from "expo-router";
+import { useEffect, useState } from "react";
+import { getSession } from "@/services/session";
+import { useDriverStore } from "@/store/driverStore";
+import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context"; // ← add
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+export default function RootLayout() {
+  const [loading, setLoading] = useState(true);
+  const segments = useSegments();
+  const router = useRouter();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const token   = useDriverStore((s) => s.token);
+  const user    = useDriverStore((s) => s.user);
+  const setUser  = useDriverStore((s) => s.setUser);
+  const setToken = useDriverStore((s) => s.setToken);
+
+  const isAuth = !!token && !!user;
+
+  useEffect(() => {
+    const bootstrap = async () => {
+      try {
+        const session = await getSession();
+        if (session?.token && session?.user) {
+          setToken(session.token);
+          setUser(session.user);
+        }
+      } catch (e) {
+        console.error("Bootstrap error:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    bootstrap();
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const inAuthGroup = segments[0] === "(auth)";
+    if (!isAuth && !inAuthGroup) {
+      router.replace("/(auth)/login");
+    } else if (isAuth && inAuthGroup) {
+      router.replace("/(tabs)/home");
+    }
+  }, [loading, isAuth, segments]);
+
+  if (loading) {
+    return (
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#0B1220" }}>
+          <ActivityIndicator size="large" color="#F4A623" />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </SafeAreaProvider>
   );
 }
