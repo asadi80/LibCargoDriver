@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { getSession } from "@/services/session";
 import { useDriverStore } from "@/store/driverStore";
 import { ActivityIndicator, View } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context"; // ← add
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar"; // 🆕
 
 export default function RootLayout() {
   const [loading, setLoading] = useState(true);
@@ -48,6 +49,7 @@ export default function RootLayout() {
   if (loading) {
     return (
       <SafeAreaProvider>
+        <StatusBar style="light" /> 
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#0B1220" }}>
           <ActivityIndicator size="large" color="#F4A623" />
         </View>
@@ -57,6 +59,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }} />
     </SafeAreaProvider>
   );
